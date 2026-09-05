@@ -1,249 +1,296 @@
 package com.aether.client
 
 import android.app.Activity
-import android.os.Bundle
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
+import android.net.Uri
+import android.os.Build
+import android.os.Bundle
+import android.provider.Settings
 import android.view.Gravity
-import android.view.View
 import android.widget.*
 
 class MainActivity : Activity() {
 
-    private val mcPackage = "com.mojang.minecraftpe"
+private val mcPackage = "com.mojang.minecraftpe"
 
-    private val bg = Color.rgb(10, 10, 15)
-    private val panel = Color.rgb(20, 20, 28)
-    private val purple = Color.rgb(135, 95, 255)
-    private val white = Color.WHITE
-    private val gray = Color.rgb(170, 170, 180)
+private val bg = Color.rgb(10, 10, 15)
+private val purple = Color.rgb(135, 95, 255)
+private val white = Color.WHITE
+private val gray = Color.rgb(170, 170, 180)
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        showHome()
+override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    showHome()
+}
+
+private fun base(): LinearLayout {
+    return LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        setPadding(24, 35, 24, 24)
+        setBackgroundColor(bg)
+    }
+}
+
+private fun title(text: String): TextView {
+    return TextView(this).apply {
+        this.text = text
+        textSize = 26f
+        setTextColor(white)
+        typeface = Typeface.DEFAULT_BOLD
+        gravity = Gravity.CENTER
+        setPadding(0, 10, 0, 25)
+    }
+}
+
+private fun section(text: String): TextView {
+    return TextView(this).apply {
+        this.text = text
+        textSize = 17f
+        setTextColor(purple)
+        typeface = Typeface.DEFAULT_BOLD
+        setPadding(5, 18, 5, 8)
+    }
+}
+
+private fun button(
+    text: String,
+    action: () -> Unit
+): Button {
+    return Button(this).apply {
+        this.text = text
+        textSize = 15f
+        setTextColor(white)
+        setOnClickListener {
+            action()
+        }
+
+        layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        ).apply {
+            setMargins(0, 7, 0, 7)
+        }
+    }
+}
+
+private fun addSwitch(
+    root: LinearLayout,
+    text: String,
+    enabled: Boolean
+) {
+    val sw = Switch(this).apply {
+        this.text = text
+        isChecked = enabled
+        setTextColor(white)
+
+        layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        ).apply {
+            setMargins(0, 2, 0, 2)
+        }
     }
 
-    private fun base(): LinearLayout {
-        return LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(24, 35, 24, 24)
+    root.addView(sw)
+}
+
+private fun scroll(root: LinearLayout) {
+    setContentView(
+        ScrollView(this).apply {
             setBackgroundColor(bg)
+            addView(root)
         }
-    }
+    )
+}
 
-    private fun title(text: String): TextView {
-        return TextView(this).apply {
-            this.text = text
-            textSize = 26f
-            setTextColor(white)
-            typeface = Typeface.DEFAULT_BOLD
-            gravity = Gravity.CENTER
-            setPadding(0, 10, 0, 25)
-        }
-    }
+private fun showHome() {
 
-    private fun button(text: String, action: () -> Unit): Button {
-        return Button(this).apply {
-            this.text = text
-            textSize = 15f
-            setTextColor(white)
-            setOnClickListener { action() }
+    val root = base()
 
-            val p = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            p.setMargins(0, 7, 0, 7)
-            layoutParams = p
-        }
-    }
+    root.addView(title("AETHER CLIENT"))
 
-    private fun section(text: String): TextView {
-        return TextView(this).apply {
-            this.text = text
-            textSize = 17f
-            setTextColor(purple)
-            typeface = Typeface.DEFAULT_BOLD
-            setPadding(5, 18, 5, 8)
-        }
-    }
-
-    private fun showHome() {
-
-        val root = base()
-
-        root.addView(title("AETHER CLIENT"))
-
-        val version = TextView(this).apply {
+    root.addView(
+        TextView(this).apply {
             text = "Bedrock 1.26.0.2  •  Android"
             textSize = 14f
             setTextColor(gray)
             gravity = Gravity.CENTER
             setPadding(0, 0, 0, 20)
         }
+    )
 
-        root.addView(version)
+    root.addView(button("▶  PLAY MINECRAFT") {
+        launchMinecraft()
+    })
 
-        root.addView(button("▶  PLAY MINECRAFT") {
-            launchMinecraft()
-        })
+    root.addView(button("◉  START AETHER OVERLAY") {
+        startAetherOverlay()
+    })
 
-        root.addView(button("⚡  OPTIMIZATION") {
-            showOptimization()
-        })
+    root.addView(button("⚡  OPTIMIZATION") {
+        showOptimization()
+    })
 
-        root.addView(button("⚔  PVP") {
-            showPvP()
-        })
+    root.addView(button("⚔  PVP") {
+        showPvP()
+    })
 
-        root.addView(button("▣  HUD") {
-            showHud()
-        })
+    root.addView(button("▣  HUD") {
+        showHud()
+    })
 
-        root.addView(button("⚙  SETTINGS") {
-            showSettings()
-        })
+    root.addView(button("⚙  SETTINGS") {
+        showSettings()
+    })
 
-        val scroll = ScrollView(this)
-        scroll.addView(root)
+    scroll(root)
+}
 
-        setContentView(scroll)
-    }
+private fun showOptimization() {
 
-    private fun showOptimization() {
+    val root = base()
 
-        val root = base()
+    root.addView(title("OPTIMIZATION"))
 
-        root.addView(title("OPTIMIZATION"))
+    root.addView(section("PERFORMANCE PRESETS"))
 
-        root.addView(section("PERFORMANCE PRESETS"))
+    root.addView(button("🚀 EXTREME FPS") {
+        Toast.makeText(
+            this,
+            "Extreme FPS preset selected",
+            Toast.LENGTH_SHORT
+        ).show()
+    })
 
-        root.addView(button("🚀 EXTREME FPS") {
-            Toast.makeText(
-                this,
-                "Extreme FPS preset selected",
-                Toast.LENGTH_SHORT
-            ).show()
-        })
+    root.addView(button("⚡ BALANCED") {
+        Toast.makeText(
+            this,
+            "Balanced preset selected",
+            Toast.LENGTH_SHORT
+        ).show()
+    })
 
-        root.addView(button("⚡ BALANCED") {
-            Toast.makeText(
-                this,
-                "Balanced preset selected",
-                Toast.LENGTH_SHORT
-            ).show()
-        })
+    root.addView(button("🔋 BATTERY") {
+        Toast.makeText(
+            this,
+            "Battery preset selected",
+            Toast.LENGTH_SHORT
+        ).show()
+    })
 
-        root.addView(button("🔋 BATTERY") {
-            Toast.makeText(
-                this,
-                "Battery preset selected",
-                Toast.LENGTH_SHORT
-            ).show()
-        })
+    root.addView(section("RENDER OPTIMIZATION"))
 
-        root.addView(section("RENDER"))
+    addSwitch(root, "Render Culling", false)
+    addSwitch(root, "Entity Culling", false)
+    addSwitch(root, "Particle Optimization", true)
+    addSwitch(root, "Animation Optimization", true)
+    addSwitch(root, "Smart FPS", true)
+    addSwitch(root, "FPS Stabilizer", true)
 
-        addSwitch(root, "Max FPS", true)
-        addSwitch(root, "Low Effects", true)
-        addSwitch(root, "Clouds", false)
-        addSwitch(root, "Smooth Lighting", false)
-        addSwitch(root, "Anti-Aliasing", false)
-        addSwitch(root, "Particles", false)
-        addSwitch(root, "Animations", false)
+    root.addView(section("GRAPHICS"))
 
-        root.addView(section("DISTANCE"))
+    addSwitch(root, "Low Effects", true)
+    addSwitch(root, "Clouds", false)
+    addSwitch(root, "Smooth Lighting", false)
+    addSwitch(root, "Anti-Aliasing", false)
+    addSwitch(root, "Particles", false)
+    addSwitch(root, "Animations", false)
 
-        addSwitch(root, "Low Entity Distance", true)
-        addSwitch(root, "Low Render Distance", true)
+    root.addView(section("DISTANCE"))
 
-        root.addView(button("← BACK") {
-            showHome()
-        })
+    addSwitch(root, "Low Entity Distance", true)
+    addSwitch(root, "Low Render Distance", true)
 
-        setContentView(ScrollView(this).apply {
-            addView(root)
-        })
-    }
+    root.addView(button("← BACK") {
+        showHome()
+    })
 
-    private fun showPvP() {
+    scroll(root)
+}
 
-        val root = base()
+private fun showPvP() {
 
-        root.addView(title("PVP"))
+    val root = base()
 
-        root.addView(section("PVP HUD"))
+    root.addView(title("PVP"))
 
-        addSwitch(root, "CPS Counter", true)
-        addSwitch(root, "FPS Counter", true)
-        addSwitch(root, "Ping Counter", true)
-        addSwitch(root, "Coordinates", false)
+    root.addView(section("PVP HUD"))
 
-        root.addView(section("PVP OPTIONS"))
+    addSwitch(root, "CPS Counter", true)
+    addSwitch(root, "FPS Counter", true)
+    addSwitch(root, "Ping Counter", true)
+    addSwitch(root, "Coordinates", false)
 
-        addSwitch(root, "Hit Indicator", true)
-        addSwitch(root, "Attack Indicator", true)
-        addSwitch(root, "Keystrokes", false)
+    root.addView(section("PVP OPTIONS"))
 
-        root.addView(button("← BACK") {
-            showHome()
-        })
+    addSwitch(root, "Hit Indicator", true)
+    addSwitch(root, "Attack Indicator", true)
+    addSwitch(root, "Keystrokes", false)
 
-        setContentView(ScrollView(this).apply {
-            addView(root)
-        })
-    }
+    root.addView(button("← BACK") {
+        showHome()
+    })
 
-    private fun showHud() {
+    scroll(root)
+}
 
-        val root = base()
+private fun showHud() {
 
-        root.addView(title("HUD"))
+    val root = base()
 
-        root.addView(section("HUD MODULES"))
+    root.addView(title("HUD"))
 
-        addSwitch(root, "FPS", true)
-        addSwitch(root, "Ping", true)
-        addSwitch(root, "CPS", true)
-        addSwitch(root, "Coordinates", false)
-        addSwitch(root, "Keystrokes", false)
+    root.addView(section("HUD MODULES"))
 
-        root.addView(section("TOUCH"))
+    addSwitch(root, "FPS", true)
+    addSwitch(root, "Ping", true)
+    addSwitch(root, "CPS", true)
+    addSwitch(root, "Coordinates", false)
+    addSwitch(root, "Keystrokes", false)
 
-        addSwitch(root, "Touch HUD", true)
-        addSwitch(root, "Large Buttons", false)
+    root.addView(section("TOUCH"))
 
-        root.addView(button("← BACK") {
-            showHome()
-        })
+    addSwitch(root, "Touch HUD", true)
+    addSwitch(root, "Large Buttons", false)
 
-        setContentView(ScrollView(this).apply {
-            addView(root)
-        })
-    }
+    root.addView(button("← BACK") {
+        showHome()
+    })
 
-    private fun showSettings() {
+    scroll(root)
+}
 
-        val root = base()
+private fun showSettings() {
 
-        root.addView(title("SETTINGS"))
+    val root = base()
 
-        root.addView(section("AETHER"))
+    root.addView(title("SETTINGS"))
 
-        root.addView(button("Client Version: 0.2.0") {})
+    root.addView(section("AETHER"))
 
-        root.addView(button("Minecraft Package") {
+    root.addView(
+        button("Client Version: 3.0") {}
+    )
+
+    root.addView(
+        button("Minecraft Package") {
             Toast.makeText(
                 this,
                 mcPackage,
                 Toast.LENGTH_SHORT
             ).show()
-        })
+        }
+    )
 
-        root.addView(button("Check Minecraft") {
+    root.addView(
+        button("CHECK MINECRAFT") {
 
             val installed =
-                packageManager.getLaunchIntentForPackage(mcPackage) != null
+                packageManager.getLaunchIntentForPackage(
+                    mcPackage
+                ) != null
 
             Toast.makeText(
                 this,
@@ -253,57 +300,66 @@ class MainActivity : Activity() {
                     "Không tìm thấy Minecraft",
                 Toast.LENGTH_LONG
             ).show()
-        })
+        }
+    )
 
-        root.addView(button("← BACK") {
+    root.addView(
+        button("← BACK") {
             showHome()
-        })
+        }
+    )
 
-        setContentView(ScrollView(this).apply {
-            addView(root)
-        })
+    scroll(root)
+}
+
+private fun launchMinecraft() {
+
+    val intent =
+        packageManager.getLaunchIntentForPackage(
+            mcPackage
+        )
+
+    if (intent != null) {
+        startActivity(intent)
+    } else {
+        Toast.makeText(
+            this,
+            "Minecraft Bedrock chưa được cài.",
+            Toast.LENGTH_LONG
+        ).show()
     }
+}
 
-    private fun addSwitch(
-        root: LinearLayout,
-        text: String,
-        enabled: Boolean
-    ) {
+private fun startAetherOverlay() {
 
-        val sw = Switch(this).apply {
-            this.text = text
-            isChecked = enabled
-            setTextColor(white)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 
-            val p = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
+        if (!Settings.canDrawOverlays(this)) {
+
+            val intent = Intent(
+                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:$packageName")
             )
 
-            p.setMargins(0, 2, 0, 2)
-
-            layoutParams = p
-        }
-
-        root.addView(sw)
-    }
-
-    private fun launchMinecraft() {
-
-        val intent =
-            packageManager.getLaunchIntentForPackage(mcPackage)
-
-        if (intent != null) {
-
             startActivity(intent)
-
-        } else {
-
-            Toast.makeText(
-                this,
-                "Minecraft Bedrock chưa được cài.",
-                Toast.LENGTH_LONG
-            ).show()
+            return
         }
     }
+
+    val serviceIntent =
+        Intent(this, OverlayService::class.java)
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        startForegroundService(serviceIntent)
+    } else {
+        startService(serviceIntent)
+    }
+
+    Toast.makeText(
+        this,
+        "Aether Overlay đã bật",
+        Toast.LENGTH_SHORT
+    ).show()
+}
+
 }
