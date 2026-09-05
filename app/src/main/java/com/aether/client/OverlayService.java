@@ -1,117 +1,304 @@
 package com.aether.client;
 
-import android.app.Service;
+import android.app.Activity;
+import android.os.Bundle;
 import android.content.Intent;
+import android.provider.Settings;
+import android.net.Uri;
 import android.graphics.Color;
-import android.graphics.PixelFormat;
 import android.graphics.Typeface;
-import android.os.IBinder;
+import android.graphics.drawable.GradientDrawable;
 import android.view.Gravity;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.WindowManager;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Switch;
 
-public class OverlayService extends Service {
+public class MainActivity extends Activity {
 
-    private WindowManager windowManager;
-    private TextView button;
+    private final int BG = Color.rgb(13, 14, 18);
+    private final int CARD = Color.rgb(25, 27, 33);
+    private final int WHITE = Color.WHITE;
+    private final int GRAY = Color.rgb(160, 165, 175);
 
     @Override
-    public void onCreate() {
-        super.onCreate();
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
-        windowManager =
-                (WindowManager) getSystemService(WINDOW_SERVICE);
+        ModuleManager.init();
 
-        button = new TextView(this);
+        showAetherMenu();
+    }
 
-        button.setText("A");
-        button.setTextColor(Color.WHITE);
-        button.setTextSize(18);
-        button.setGravity(Gravity.CENTER);
-        button.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+    private GradientDrawable background(int color) {
+        GradientDrawable drawable =
+                new GradientDrawable();
 
-        button.setBackgroundColor(Color.rgb(35, 100, 220));
+        drawable.setColor(color);
+        drawable.setCornerRadius(28);
 
-        WindowManager.LayoutParams params =
-                new WindowManager.LayoutParams(
-                        60,
-                        60,
-                        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-                        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-                        PixelFormat.TRANSLUCENT);
+        return drawable;
+    }
 
-        params.gravity = Gravity.TOP | Gravity.START;
-        params.x = 30;
-        params.y = 200;
+    private TextView text(
+            String value,
+            float size) {
 
-        windowManager.addView(button, params);
+        TextView view = new TextView(this);
 
-        button.setOnClickListener(v -> {
-            Intent intent =
-                    new Intent(this, MainActivity.class);
+        view.setText(value);
+        view.setTextColor(WHITE);
+        view.setTextSize(size);
+        view.setPadding(20, 12, 20, 12);
 
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        return view;
+    }
 
-            startActivity(intent);
-        });
+    private LinearLayout module(
+            Module module) {
 
-        button.setOnTouchListener(
-                new View.OnTouchListener() {
+        LinearLayout card =
+                new LinearLayout(this);
 
-                    private int startX;
-                    private int startY;
-                    private float downX;
-                    private float downY;
+        card.setOrientation(
+                LinearLayout.VERTICAL);
 
-                    @Override
-                    public boolean onTouch(
-                            View v,
-                            MotionEvent event) {
+        card.setPadding(
+                12, 10, 12, 10);
 
-                        switch (event.getAction()) {
+        card.setBackground(
+                background(CARD));
 
-                            case MotionEvent.ACTION_DOWN:
-                                startX = params.x;
-                                startY = params.y;
-                                downX = event.getRawX();
-                                downY = event.getRawY();
-                                return false;
+        LinearLayout.LayoutParams cardParams =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT);
 
-                            case MotionEvent.ACTION_MOVE:
-                                params.x =
-                                        startX +
-                                        (int)(event.getRawX() - downX);
+        cardParams.setMargins(
+                8, 6, 8, 6);
 
-                                params.y =
-                                        startY +
-                                        (int)(event.getRawY() - downY);
+        card.setLayoutParams(cardParams);
 
-                                windowManager.updateViewLayout(
-                                        button,
-                                        params);
+        LinearLayout row =
+                new LinearLayout(this);
 
-                                return true;
-                        }
+        row.setGravity(
+                Gravity.CENTER_VERTICAL);
 
-                        return false;
-                    }
+        TextView title =
+                text(module.getName(), 17);
+
+        title.setTypeface(
+                Typeface.DEFAULT,
+                Typeface.BOLD);
+
+        Switch toggle =
+                new Switch(this);
+
+        toggle.setChecked(
+                module.isEnabled());
+
+        toggle.setOnCheckedChangeListener(
+                (buttonView, checked) -> {
+
+                    module.setEnabled(
+                            checked);
+
                 });
+
+        row.addView(
+                title,
+                new LinearLayout.LayoutParams(
+                        0,
+                        -2,
+                        1));
+
+        row.addView(toggle);
+
+        card.addView(row);
+
+        return card;
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
+    private void showAetherMenu() {
 
-        if (button != null) {
-            windowManager.removeView(button);
+        LinearLayout root =
+                new LinearLayout(this);
+
+        root.setOrientation(
+                LinearLayout.VERTICAL);
+
+        root.setPadding(
+                14, 18, 14, 18);
+
+        root.setBackgroundColor(BG);
+
+        TextView title =
+                text("AETHER", 30);
+
+        title.setTypeface(
+                Typeface.DEFAULT,
+                Typeface.BOLD);
+
+        root.addView(title);
+
+        TextView version =
+                text(
+                        "CLIENT 3.0 • ANDROID",
+                        12);
+
+        version.setTextColor(GRAY);
+
+        root.addView(version);
+
+        /*
+         * OVERLAY BUTTON
+         */
+
+        TextView overlayButton =
+                text(
+                        "◉  START AETHER OVERLAY",
+                        15);
+
+        overlayButton.setTypeface(
+                Typeface.DEFAULT,
+                Typeface.BOLD);
+
+        overlayButton.setBackground(
+                background(
+                        Color.rgb(35, 90, 190)));
+
+        overlayButton.setGravity(
+                Gravity.CENTER);
+
+        overlayButton.setOnClickListener(
+                v -> startOverlay());
+
+        LinearLayout.LayoutParams overlayParams =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT);
+
+        overlayParams.setMargins(
+                8, 12, 8, 12);
+
+        root.addView(
+                overlayButton,
+                overlayParams);
+
+        /*
+         * SCROLL AREA
+         */
+
+        ScrollView scroll =
+                new ScrollView(this);
+
+        LinearLayout list =
+                new LinearLayout(this);
+
+        list.setOrientation(
+                LinearLayout.VERTICAL);
+
+        TextView performance =
+                text(
+                        "⚡  PERFORMANCE",
+                        16);
+
+        performance.setTypeface(
+                Typeface.DEFAULT,
+                Typeface.BOLD);
+
+        list.addView(performance);
+
+        for (Module module :
+                ModuleManager.getModules()) {
+
+            list.addView(
+                    module(module));
         }
+
+        TextView hud =
+                text(
+                        "📊  HUD",
+                        16);
+
+        hud.setTypeface(
+                Typeface.DEFAULT,
+                Typeface.BOLD);
+
+        list.addView(hud);
+
+        list.addView(
+                module(
+                        new Module(
+                                "FPS Counter")));
+
+        list.addView(
+                module(
+                        new Module(
+                                "Ping")));
+
+        list.addView(
+                module(
+                        new Module(
+                                "CPS")));
+
+        TextView settings =
+                text(
+                        "⚙  SETTINGS",
+                        16);
+
+        settings.setTypeface(
+                Typeface.DEFAULT,
+                Typeface.BOLD);
+
+        list.addView(settings);
+
+        list.addView(
+                module(
+                        new Module(
+                                "Dark Theme")));
+
+        scroll.addView(list);
+
+        root.addView(
+                scroll,
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        0,
+                        1));
+
+        setContentView(root);
     }
 
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
+    /*
+     * START OVERLAY
+     */
+
+    private void startOverlay() {
+
+        if (android.os.Build.VERSION.SDK_INT >= 23) {
+
+            if (!Settings.canDrawOverlays(this)) {
+
+                Intent intent =
+                        new Intent(
+                                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                                Uri.parse(
+                                        "package:" +
+                                        getPackageName()));
+
+                startActivity(intent);
+
+                return;
+            }
+        }
+
+        Intent service =
+                new Intent(
+                        this,
+                        OverlayService.class);
+
+        startService(service);
     }
-          }
+            }
