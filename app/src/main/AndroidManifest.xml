@@ -2,7 +2,12 @@
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Cho phép Aether hiển thị overlay trên ứng dụng khác -->
+    <!-- Cho phép Aether kiểm tra Minecraft -->
+    <queries>
+        <package android:name="com.mojang.minecraftpe" />
+    </queries>
+
+    <!-- Quyền hiển thị overlay -->
     <uses-permission
         android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
@@ -12,24 +17,19 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-        <!-- Aether main app -->
+        <!-- Aether Main Activity -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
 
             <intent-filter>
-
-                <action
-                    android:name="android.intent.action.MAIN" />
-
-                <category
-                    android:name="android.intent.category.LAUNCHER" />
-
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
         </activity>
 
-        <!-- Aether overlay service -->
+        <!-- Aether Overlay -->
         <service
             android:name=".OverlayService"
             android:exported="false" />
